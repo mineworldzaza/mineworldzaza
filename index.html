@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Model Viewer</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="container">
+        <canvas id="viewer"></canvas>
+        <div id="info">
+            <h3>Model Information</h3>
+            <p><strong>Vertices:</strong> <span id="vertices">N/A</span></p>
+            <p><strong>Faces (Triangles):</strong> <span id="faces">N/A</span></p>
+            <p><strong>Right Triangles:</strong> <span id="right-triangles">N/A</span></p>
+        </div>
+        <input type="file" id="file-input" accept=".obj, .stl, .fbx">
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/loaders/OBJLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/loaders/STLLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pako@2.0.4/dist/pako.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/loaders/FBXLoader.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
