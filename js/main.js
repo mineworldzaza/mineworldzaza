@@ -62,6 +62,9 @@ function animate() {
 // Initialize the scene
 init();
 
+// Expose the loadModel function for testing
+window.loadModel = loadModel;
+
 // File loading
 const fileInput = document.getElementById('file-input');
 let currentModel;
@@ -92,30 +95,38 @@ fileInput.addEventListener('change', (event) => {
 });
 
 function loadModel(contents, fileName) {
+    console.log(`Loading model: ${fileName}`);
     const extension = fileName.split('.').pop().toLowerCase();
     let loader;
 
     switch (extension) {
         case 'obj':
+            console.log("Using OBJLoader");
             loader = new OBJLoader();
             currentModel = loader.parse(contents);
+            window.currentModel = currentModel; // Expose for debugging
             scene.add(currentModel);
             updateModelInfo(currentModel);
             break;
         case 'stl':
+            console.log("Using STLLoader");
             loader = new STLLoader();
             const geometry = loader.parse(contents);
             const material = new THREE.MeshStandardMaterial({ color: 0xcccccc });
             currentModel = new THREE.Mesh(geometry, material);
+            window.currentModel = currentModel; // Expose for debugging
             scene.add(currentModel);
             updateModelInfo(currentModel);
             break;
         case 'fbx':
+            console.log("Using FBXLoader");
             if (typeof pako === 'undefined') {
                 console.error('pako is not defined. This is a dependency for FBXLoader.');
             }
             loader = new FBXLoader();
+            loader.setInflate(pako.inflate);
             currentModel = loader.parse(contents);
+            window.currentModel = currentModel; // Expose for debugging
             scene.add(currentModel);
             updateModelInfo(currentModel);
             break;
@@ -126,12 +137,15 @@ function loadModel(contents, fileName) {
 }
 
 function updateModelInfo(model) {
+    console.log("Updating model info for:", model);
     let vertices = 0;
     let faces = 0;
     let rightTriangles = 0;
 
     model.traverse((child) => {
+        console.log("Traversing child:", child);
         if (child.isMesh) {
+            console.log("Found a mesh:", child);
             const geometry = child.geometry;
             if (geometry.isBufferGeometry) {
                 vertices += geometry.attributes.position.count;
@@ -158,31 +172,27 @@ function countRightTriangles(geometry) {
     let count = 0;
     const epsilon = 1e-5;
 
-    const vA = new THREE.Vector3();
-    const vB = new THREE.Vector3();
-    const vC = new THREE.Vector3();
-
     if (indices) {
         for (let i = 0; i < indices.count; i += 3) {
             const iA = indices.getX(i);
             const iB = indices.getX(i + 1);
             const iC = indices.getX(i + 2);
 
-            vA.fromBufferAttribute(positions, iA);
-            vB.fromBufferAttribute(positions, iB);
-            vC.fromBufferAttribute(positions, iC);
+            const p1 = new THREE.Vector3().fromBufferAttribute(positions, iA);
+            const p2 = new THREE.Vector3().fromBufferAttribute(positions, iB);
+            const p3 = new THREE.Vector3().fromBufferAttribute(positions, iC);
 
-            if (isRightTriangle(vA, vB, vC, epsilon)) {
+            if (isRightTriangle(p1, p2, p3, epsilon)) {
                 count++;
             }
         }
     } else {
         for (let i = 0; i < positions.count; i += 3) {
-            vA.fromBufferAttribute(positions, i);
-            vB.fromBufferAttribute(positions, i + 1);
-            vC.fromBufferAttribute(positions, i + 2);
+            const p1 = new THREE.Vector3().fromBufferAttribute(positions, i);
+            const p2 = new THREE.Vector3().fromBufferAttribute(positions, i + 1);
+            const p3 = new THREE.Vector3().fromBufferAttribute(positions, i + 2);
 
-            if (isRightTriangle(vA, vB, vC, epsilon)) {
+            if (isRightTriangle(p1, p2, p3, epsilon)) {
                 count++;
             }
         }
@@ -190,10 +200,17 @@ function countRightTriangles(geometry) {
     return count;
 }
 
+function distanceSq(p1, p2) {
+    const dx = p1.x - p2.x;
+    const dy = p1.y - p2.y;
+    const dz = p1.z - p2.z;
+    return dx * dx + dy * dy + dz * dz;
+}
+
 function isRightTriangle(p1, p2, p3, epsilon) {
-    const d1 = p1.distanceToSq(p2);
-    const d2 = p2.distanceToSq(p3);
-    const d3 = p3.distanceToSq(p1);
+    const d1 = distanceSq(p1, p2);
+    const d2 = distanceSq(p2, p3);
+    const d3 = distanceSq(p3, p1);
 
     return Math.abs((d1 + d2) - d3) < epsilon ||
            Math.abs((d2 + d3) - d1) < epsilon ||
