@@ -25,6 +25,7 @@ function init() {
     renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
     renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
 
     // Lighting
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
