@@ -1,9 +1,8 @@
-// js/main.js
-
-// Check if Three.js is loaded
-if (typeof THREE === 'undefined') {
-    console.error('Three.js has not been loaded. Check the script tags in index.html');
-}
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
+import { STLLoader } from 'three/addons/loaders/STLLoader.js';
+import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 
 // Scene components
 let scene, camera, renderer, controls;
@@ -15,6 +14,7 @@ const canvas = document.getElementById('viewer');
 function init() {
     // Scene
     scene = new THREE.Scene();
+    window.scene = scene; // Expose scene for debugging/testing
     scene.background = new THREE.Color(0x222222);
 
     // Camera
@@ -35,8 +35,8 @@ function init() {
     scene.add(directionalLight);
 
     // Controls
-    controls = new THREE.OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
+    controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
     controls.dampingFactor = 0.05;
 
     // Handle window resize
@@ -54,7 +54,7 @@ function onWindowResize() {
 
 function animate() {
     requestAnimationFrame(animate);
-    controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
+    controls.update();
     renderer.render(scene, camera);
 }
 
@@ -71,7 +71,6 @@ fileInput.addEventListener('change', (event) => {
         return;
     }
 
-    // Remove previous model
     if (currentModel) {
         scene.remove(currentModel);
     }
@@ -97,13 +96,13 @@ function loadModel(contents, fileName) {
 
     switch (extension) {
         case 'obj':
-            loader = new THREE.OBJLoader();
+            loader = new OBJLoader();
             currentModel = loader.parse(contents);
             scene.add(currentModel);
             updateModelInfo(currentModel);
             break;
         case 'stl':
-            loader = new THREE.STLLoader();
+            loader = new STLLoader();
             const geometry = loader.parse(contents);
             const material = new THREE.MeshStandardMaterial({ color: 0xcccccc });
             currentModel = new THREE.Mesh(geometry, material);
@@ -111,11 +110,10 @@ function loadModel(contents, fileName) {
             updateModelInfo(currentModel);
             break;
         case 'fbx':
-            // FBXLoader needs pako library for decompression
             if (typeof pako === 'undefined') {
-                console.error('pako is not defined. Make sure it is included in your html');
+                console.error('pako is not defined. This is a dependency for FBXLoader.');
             }
-            loader = new THREE.FBXLoader();
+            loader = new FBXLoader();
             currentModel = loader.parse(contents);
             scene.add(currentModel);
             updateModelInfo(currentModel);
